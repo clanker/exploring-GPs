@@ -14,22 +14,23 @@ knitr::opts_chunk$set(echo = TRUE)
 ### Gaussian Processes: High-Level Summary
 
 The goal in regression is to approximate the regression function.
-We aim for the "best" function $f(x)$ that maps the (multivariate) input space
+We aim for the "best" function $f(x)$ that maps the (scalar or multivariate) input space
 $X = x$ to the continuous (scalar) response $y$.
 A statistical model is a class of functions related by a set of
-parameters, and generally restricting the choice of $f(x)$ to
+parameters---generally, limiting the choice of $f(x)$ to
 a statistical model's family of functions is too restrictive,
 resulting in (potentially significant) estimator bias.
+
 As opposed to restricting the collection of functions to be
 considered for $f(x)$ and then selecting the one that matches
 the data best (i.e., maximizes the likelihood),
 we can instead consider all functions (without restriction)
 and place a prior on each function according to how likely we
 would want that function to be our chosen $f(x)$.
-For example, smoother functions would have much higher prior
-weight. A prior that accomplishes the task of assigning
-weights to functions is a _process_.
-This approach is not tractable, but an elegant solution
+(For example, smoother functions would have much higher prior weight.) 
+The task of assigning weights to functions is a _process_.
+Creating such a prior to implement this approach is not tractable.
+However, an elegant solution
 is to discretize the space where the function is considered---and 
 being even more restrictive, allow only a finite number
 of $x$ to be considered.
@@ -38,18 +39,30 @@ Pursuing this further, take any $f(x)$.
 Evaluate $f(x)$ at the finite number of points under consideration:
 $x_1, x_2, \dots, x_n$.
 These values have positive probability of coming from
-the following model:
-$$MVN_n( h(x), \Sigma )$$
+the following prior on "functions" (that are now discretized):
+$MVN_n( h(x), \Sigma )$,
 where $h(x)$ is some arbitrary defined function
 and $\Sigma$ is a covariance method that is not singular.
 Though $f(x)$ itself cannot be generated with the MVN distribution
 (not unless $f(x)$ is itself from the same type of MVN),
 its $n$-point reduction can be approximated.
-The "prior" then is the combination of $h(x)$, likely from
-some demeaning operation using whatever statistical methods
-are applicable, and the covariance $\Sigma$,
-as different $\Sigma$ will sharply control the probability
-of the different $X$ drawn from this MVN distribution.
+The "prior" then is the combination of $h(x)$
+(the mean regression function from some statistical methods)
+and the covariance $\Sigma$.
+Different $\Sigma$ will sharply control the probability
+of the different $X$ drawn from this MVN distribution,
+and changing $h(x)$ only shifts where the distribution lies
+in the $X$ space.
+
+For multivariate $X$, the only thing required is a mapping
+from $\mathbb{R}^p$ to $\mathbb{R}$,
+accomplished through a distance metric.
+The critical part of using the MVN distribution is that
+distances between training set instances and testing set instances
+are well-behaved, as the gaps between points $x_1, x_2, \dots, x_n$
+will be smoothly filled in by the MVN properties and formulae.
+
+
 
 
 
