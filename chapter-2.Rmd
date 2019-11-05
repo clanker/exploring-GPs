@@ -1,0 +1,68 @@
+---
+title: "Chapter 2"
+author: "Cory Lanker"
+date: "11/4/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(MASS)
+library(mvtnorm)
+library(tidyverse)
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Example 1: 3 points, linear regression coef. estimation
+```{r}
+Sp <- diag(2)
+Sp_inv <- solve(Sp)
+X <- matrix(c(1, 1, 1, -5, 2, 5), nrow = 2, byrow = T)
+y <- as.vector(c(-5.44, 0.44, 4.56))
+sn2 <- 1
+A <- sn2 * (X %*% t(X)) + Sp_inv
+A_inv <- solve(A)
+w_bar <- (1 / sn2) * (A_inv %*% X) %*% y
+```
+
+```{r}
+out <- expand.grid(x1 = seq(0, 1, 0.05), x2 = seq(3, 5, 0.1))
+z <- 1:nrow(out)
+out %>%
+  ggplot(aes(x = x1, y = x2)) +
+  geom_point(aes(col = z))
+```
+
+```{r}
+# Prior ------------------
+out <- expand.grid(x1 = seq(-2, 2, 0.01), x2 = seq(-2, 2, 0.01))
+z1 <- dmvnorm(out, rep(0, 2), Sp)
+z2 <- dmvnorm(out, w_bar, A_inv)
+out %>%
+  ggplot(aes(x = x1, y = x2)) +
+  geom_contour(aes(z = z1), col = 'blue') +
+  geom_contour(aes(z = z2), col = 'red')
+
+```
+
+```{r}
+## Prediction
+xs <- as.matrix(expand.grid(1, seq(-6, 6, 0.01)))
+ys <- tibble(m = as.double()) %>% mutate(std = m)
+for (i in 1:nrow(xs))
+{
+  ys[i, 1] <- (1 / sn2) * (xs[i, ] %*% (A_inv %*% (X %*% y)))
+  ys[i, 2] <- sqrt(xs[i, , drop = F] %*% (A_inv %*% t(xs[i, , drop = F])))
+}
+```
+
+```{r}
+dat <- tibble(x = X[2, ], y = y)
+ys %>%
+  ggplot(aes(x = xs[, 2])) +
+    geom_line(aes(y = m), col = 'black') +
+    geom_line(aes(y = m + 2 * std), col = 'blue') +
+    geom_line(aes(y = m - 2 * std), col = 'blue') +
+    coord_fixed(xlim = c(-5, 5), ylim = c(-5.2, 4.8)) +
+    geom_point(data = dat, aes(x = x, y = y), pch = 'x', size = 5, col = 'red')
+```
+
