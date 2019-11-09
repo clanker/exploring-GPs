@@ -43,7 +43,6 @@ out %>%
   ggplot(aes(x = x1, y = x2)) +
   geom_contour(aes(z = z1), col = 'blue') +
   geom_contour(aes(z = z2), col = 'red')
-
 ```
 
 ```{r}
@@ -66,6 +65,32 @@ ys %>%
     geom_line(aes(y = m - 2 * std), col = 'blue') +
     coord_fixed(xlim = c(-5, 5), ylim = c(-5.2, 4.8)) +
     geom_point(data = dat, aes(x = x, y = y), pch = 'x', size = 5, col = 'red')
+```
+
+## Example 2: 5 points in Figure 2.2 plot
+```{r}
+## data --------------
+y <- as.vector(c(-2, 0, 1, 2, -1))
+x <- as.vector(c(-4, -3, -1, 0, 2))
+dat <- tibble(x = x, y = y)
+## GP ----------------
+K <- exp(-0.5 * (rdist(x) ^ 2)) 
+K_inv <- solve(K)
+xs <- seq(-5, 5, 0.05)
+ys <- tibble(x = xs, ym = NA, ysd = NA)
+for (i in 1:length(xs))
+{
+  Ks <- exp(-0.5 * (rdist(xs[i], x) ^ 2)) 
+  ys[i, 2] <- Ks %*% (K_inv %*% y)  
+  ys[i, 3] <- sqrt(1 - Ks %*% (K_inv %*% t(Ks)))
+}
+
+ys %>%
+  ggplot(aes(x = xs)) +
+  geom_line(aes(y = ym), col = 'green') +
+  geom_line(aes(y = ym - 2 * ysd), col = 'red') +
+  geom_line(aes(y = ym + 2 * ysd), col = 'black') +
+  geom_point(data = dat, aes(x = x, y = y), pch = '+', col = 'blue', size = 6)
 ```
 
 ## R package RobustGaSP
